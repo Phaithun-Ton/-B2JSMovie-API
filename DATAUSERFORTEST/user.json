@@ -1,0 +1,72 @@
+[
+  {
+    "firstName": "Jill",
+    "lastName": "Royce",
+    "email": "DIKJill@gmail.com",
+    "password": "Jillpass",
+    "confirmPassword": "Jillpass"
+  },
+  {
+    "firstName": "Bella",
+    "lastName": "Valentine",
+    "email": "DIKBella@gmail.com",
+    "password": "Bellapass",
+    "confirmPassword": "Bellapass"
+  },
+  {
+    "firstName": "Arus",
+    "lastName": "Aly",
+    "email": "DIKArus@gmail.com",
+    "password": "Aruspass",
+    "confirmPassword": "Aruspass"
+  },
+  {
+    "firstName": "Sage",
+    "lastName": "Bergrin",
+    "email": "DIKSage@gmail.com",
+    "password": "Sagepass",
+    "confirmPassword": "Sagepass"
+  },
+  {
+    "firstName": "Josy",
+    "lastName": "Redsen",
+    "email": "DIKJosy@gmail.com",
+    "password": "Josypass",
+    "confirmPassword": "Josypass"
+  },
+  {
+    "firstName": "Maya",
+    "lastName": "Mary",
+    "email": "DIKMaya@gmail.com",
+    "password": "Mayapass",
+    "confirmPassword": "Mayapass"
+  },
+  {
+    "firstName": "Malisa",
+    "lastName": "Logus",
+    "email": "DIKMalisa@gmail.com",
+    "password": "Malisapass",
+    "confirmPassword": "Malisapass"
+  },
+  {
+    "firstName": "Jode",
+    "lastName": "Bergrin",
+    "email": "DIKJode@gmail.com",
+    "password": "Jodepass",
+    "confirmPassword": "Jodepass"
+  },
+  {
+    "firstName": "Drake",
+    "lastName": "Mary",
+    "email": "DIKDrake@gmail.com",
+    "password": "Drakepass",
+    "confirmPassword": "Drakepass"
+  },
+  {
+    "firstName": "Mona",
+    "lastName": "Rome",
+    "email": "DIKMona@gmail.com",
+    "password": "Monapass",
+    "confirmPassword": "Monapass"
+  }
+]
