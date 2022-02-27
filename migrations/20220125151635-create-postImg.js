@@ -9,9 +9,14 @@ module.exports = {
      * await queryInterface.createTable('users', { id: Sequelize.INTEGER });
      */
     await queryInterface.createTable("post_imgs", {
+      id: {
+        type: Sequelize.DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+      },
       img_url: {
         type: Sequelize.DataTypes.STRING,
-        primaryKey: true,
+        allowNull: false,
       },
       post_id: {
         type: Sequelize.DataTypes.INTEGER,

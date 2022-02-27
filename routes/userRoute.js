@@ -1,24 +1,49 @@
 const express = require("express");
-const router = express.Router();
 const authenticate = require("../middlewares/authenticate");
-const authController = require("../controllers/authController");
-const userController = require("../controllers/userController");
+const { register, login } = require("../controllers/authController");
+const {
+  getMe,
+  updateProfileImg,
+  updateRoleOwner,
+  changeRoleOwner,
+  updateRoleAdmin,
+  changeRoleAdmin,
+  backListUser,
+  deleteBackListUser,
+} = require("../controllers/userController");
 const upload = require("../middlewares/upload");
 
-router.get("/me", authenticate, userController.getMe);
-router.post("/register", authController.register);
-router.post("/login", authController.login);
+const router = express.Router();
+
+// TODO: Get data user by yourself
+router.get("/me", authenticate, getMe);
+
+// TODO: Register
+router.post("/register", register);
+
+// TODO: Login
+router.post("/login", login);
+
+// TODO: Update user profile image
 router.patch(
   "/profile-img",
   authenticate,
   upload.single("profileImg"),
-  userController.updateProfileImg
+  updateProfileImg
 );
-router.patch("/owner", authenticate, userController.updateRoleOwner);
-router.patch("/chage-owner", authenticate, userController.chageRoleOwner);
-router.patch("/admin", authenticate, userController.updateRoleAdmin);
-router.patch("/chage-admin", authenticate, userController.chageRoleAdmin);
-router.patch("/back-list", authenticate, userController.backListUser);
-router.patch("/unban", authenticate, userController.deleteBackListUser);
+router.patch("/owner", authenticate, updateRoleOwner);
+router.patch("/change-owner", authenticate, changeRoleOwner);
+
+// TODO: Create admin role
+router.patch("/admin", authenticate, updateRoleAdmin);
+
+// TODO: Release admin role
+router.patch("/change-admin", authenticate, changeRoleAdmin);
+
+// TODO: Back list
+router.patch("/back-list", authenticate, backListUser);
+
+// TODO: UnBan
+router.patch("/unBan", authenticate, deleteBackListUser);
 
 module.exports = router;

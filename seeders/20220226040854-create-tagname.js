@@ -15,19 +15,27 @@ module.exports = {
       {
         title: "No Tag Name",
         user_id: 3,
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         title: "Drama",
         user_id: 3,
         description: "Drama movie",
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         title: "Action",
         user_id: 3,
+        created_at: new Date(),
+        updated_at: new Date(),
       },
       {
         title: "Comedy",
         user_id: 3,
+        created_at: new Date(),
+        updated_at: new Date(),
       },
     ]);
   },

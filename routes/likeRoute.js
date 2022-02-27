@@ -1,10 +1,20 @@
 const express = require("express");
 const authenticate = require("../middlewares/authenticate");
-const likeController = require("../controllers/likeController");
+const {
+  createLike,
+  unLike,
+  findLikeByUser,
+} = require("../controllers/likeController");
 
 const router = express.Router();
 
-router.post("/", authenticate, likeController.createLike);
-router.delete("/:id", authenticate, likeController.unLike);
+// TODO: Find like by user
+router.get("/:postId", authenticate, findLikeByUser);
+
+// TODO: Like post
+router.post("/:postId", authenticate, createLike);
+
+// TODO: Unlike post
+router.delete("/:postId", authenticate, unLike);
 
 module.exports = router;

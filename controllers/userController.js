@@ -2,6 +2,7 @@ const fs = require("fs");
 const cloudinary = require("cloudinary").v2;
 const { User } = require("../models");
 
+// TODO: Update user profile image
 exports.updateProfileImg = (req, res, next) => {
   try {
     cloudinary.uploader.upload(req.file.path, async (err, result) => {
@@ -26,6 +27,7 @@ exports.updateProfileImg = (req, res, next) => {
   }
 };
 
+// TODO: Get data user by yourself
 exports.getMe = (req, res, next) => {
   try {
     const { id, firstName, lastName, profileImg, email, role } = req.user;
@@ -70,7 +72,7 @@ exports.updateRoleOwner = async (req, res, next) => {
   }
 };
 
-exports.chageRoleOwner = async (req, res, next) => {
+exports.changeRoleOwner = async (req, res, next) => {
   try {
     const { role } = req.body;
     if (role !== process.env.ROLE_SECRET_KEY_OWNER) {
@@ -96,31 +98,41 @@ exports.chageRoleOwner = async (req, res, next) => {
   }
 };
 
+// TODO: Create admin role
 exports.updateRoleAdmin = async (req, res, next) => {
   try {
     const { role, userId } = req.body;
-    const checkUserId = userId ?? null;
-    if (checkUserId === "" || checkUserId === null) {
-      return res.status(400).json({ message: "userId is require" });
+
+    // ? Validate user id
+    if (typeof userId !== "number") {
+      return res.status(400).json({ message: "user id is require" });
     }
+
+    // ? Validate secret key
     if (role !== process.env.ROLE_SECRET_KEY_ADMIN) {
       return res.status(400).json({ message: "invalid secret key" });
     }
-    if (req.user.role !== process.env.ROLE_OWNER) {
-      return res.status(403).json({ message: "you not have permission" });
-    }
+
+    // // ? Validate permission
+    // if (req.user.role !== process.env.ROLE_OWNER) {
+    //   return res.status(403).json({ message: "you do not have permission" });
+    // }
+
+    // ? Find role user
     const admin = await User.findOne({ where: { id: userId } });
     if (!admin) {
-      return res.status(400).json({ message: "userId not found" });
+      return res.status(400).json({ message: "user Id not found" });
     }
-    if (admin.role === process.env.ROLE_OWNER) {
-      return res.status(400).json({ message: "user is permission owner" });
-    }
+    // if (admin.role === process.env.ROLE_OWNER) {
+    //   return res.status(400).json({ message: "user is permission owner" });
+    // }
     if (admin.role === process.env.ROLE_ADMIN) {
       return res
         .status(400)
         .json({ message: "user already have permission admin" });
     }
+
+    // ? Validate amount of admin
     const checkAdmin = await User.findAll({
       where: { role: process.env.ROLE_ADMIN },
     });
@@ -129,6 +141,8 @@ exports.updateRoleAdmin = async (req, res, next) => {
         .status(400)
         .json({ message: `only ${process.env.ROLE_ADMIN_NUMBER} role admin` });
     }
+
+    // * Create role admin
     await User.update(
       { role: process.env.ROLE_ADMIN },
       { where: { id: userId } }
@@ -143,28 +157,38 @@ exports.updateRoleAdmin = async (req, res, next) => {
   }
 };
 
-exports.chageRoleAdmin = async (req, res, next) => {
+// TODO: Release admin role
+exports.changeRoleAdmin = async (req, res, next) => {
   try {
     const { role, userId } = req.body;
-    const checkUserId = userId ?? null;
-    if (checkUserId === "" || checkUserId === null) {
-      return res.status(400).json({ message: "userId is require" });
+
+    // ? Validate user id
+    if (typeof userId !== "number") {
+      return res.status(400).json({ message: "user id is require" });
     }
+
+    // ? Validate secret key
     if (role !== process.env.ROLE_SECRET_KEY_ADMIN) {
       return res.status(400).json({ message: "invalid secret key" });
     }
-    if (req.user.role !== process.env.ROLE_OWNER) {
-      return res.status(403).json({ message: "you not have permission" });
-    }
+
+    // if (req.user.role !== process.env.ROLE_OWNER) {
+    //   return res.status(403).json({ message: "you not have permission" });
+    // }
+
     const checkUser = await User.findOne({ where: { id: userId } });
     if (!checkUser) {
-      return res.status(400).json({ message: "userId not found" });
+      return res.status(400).json({ message: "user id not found" });
     }
+
+    // ? Validate role
     if (checkUser.role === process.env.ROLE_USER) {
       return res
         .status(400)
         .json({ message: "user already have permission user" });
     }
+
+    // ? Change role admin to user
     await User.update(
       { role: process.env.ROLE_USER },
       { where: { id: userId } }
@@ -179,6 +203,7 @@ exports.chageRoleAdmin = async (req, res, next) => {
   }
 };
 
+// TODO: Back list
 exports.backListUser = async (req, res, next) => {
   try {
     const { userId } = req.body;
@@ -188,17 +213,24 @@ exports.backListUser = async (req, res, next) => {
     ) {
       return res.status(403).json({ message: "you not have permission" });
     }
-    const checkUserId = userId ?? null;
-    if (checkUserId === "" || checkUserId === null) {
-      return res.status(400).json({ message: "userId is require" });
+
+    // ? Validate user id
+    if (typeof userId !== "number") {
+      return res.status(400).json({ message: "user Id is require" });
     }
+
+    // ? Find user
     const user = await User.findOne({ where: { id: userId }, paranoid: false });
     if (!user) {
-      return res.status(400).json({ message: "userId not found" });
+      return res.status(400).json({ message: "user not found" });
     }
+
+    // ? If user is already in back list
     if (user.deletedAt !== null) {
       return res.status(400).json({ message: "user is already in back list" });
     }
+
+    // * Ban user
     user.destroy(
       { deletedAt: new Date().getDate() },
       { where: { id: userId }, force: true }
@@ -214,6 +246,7 @@ exports.backListUser = async (req, res, next) => {
   }
 };
 
+// TODO: UnBan
 exports.deleteBackListUser = async (req, res, next) => {
   try {
     const { userId } = req.body;
@@ -223,17 +256,24 @@ exports.deleteBackListUser = async (req, res, next) => {
     ) {
       return res.status(403).json({ message: "you not have permission" });
     }
-    const checkUserId = userId ?? null;
-    if (checkUserId === "" || checkUserId === null) {
-      return res.status(400).json({ message: "userId is require" });
+
+    // ? Validate user id
+    if (typeof userId !== "number") {
+      return res.status(400).json({ message: "user id is require" });
     }
+
+    // ? Find user
     const user = await User.findOne({ where: { id: userId }, paranoid: false });
     if (!user) {
       return res.status(400).json({ message: "userId not found" });
     }
+
+    // ? If user is already in back list
     if (user.deletedAt === null) {
       return res.status(400).json({ message: "user is not in back list" });
     }
+
+    // * UnBan
     user.restore({ deletedAt: null }, { where: { id: userId } });
     const userUnban = await User.findOne({
       where: { id: userId },

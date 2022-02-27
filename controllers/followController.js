@@ -1,6 +1,7 @@
 const { Op } = require("sequelize");
 const { Follow, User } = require("../models");
 
+// TODO: Get all user
 exports.getUnknown = async (req, res, next) => {
   try {
     const follows = await Follow.findAll({
@@ -35,6 +36,7 @@ exports.getUnknown = async (req, res, next) => {
   }
 };
 
+// TODO: Get all Follow
 exports.getAllFollows = async (req, res, next) => {
   try {
     const { searchName } = req.query;
@@ -79,20 +81,28 @@ exports.getAllFollows = async (req, res, next) => {
   }
 };
 
+// TODO: Follow Someone
 exports.followSomeone = async (req, res, next) => {
   try {
-    const { followId } = req.body;
-    const checkFollowId = followId ?? null;
-    if (checkFollowId === "" || checkFollowId === null) {
-      return res.status(400).json({ message: "followId is require" });
+    const { followId } = req.params;
+
+    // ? Validate follow id
+    if (typeof followId !== "string" || followId.trim() === "") {
+      return res.status(400).json({ message: "Follow Id is require" });
     }
+
+    // ? Validate if user try to follow yourself
     if (req.user.id === followId) {
-      return res.status(400).json({ message: "connot follow youself" });
+      return res.status(400).json({ message: "cannot follow yourself" });
     }
+
+    // ? Find user
     const user = await User.findOne({ where: { id: followId } });
     if (!user) {
       return res.status(400).json({ message: "followId user not found" });
     }
+
+    // ? Validate if user already follow
     const existFollow = await Follow.findOne({
       where: { followerId: req.user.id, followId },
     });
@@ -101,6 +111,8 @@ exports.followSomeone = async (req, res, next) => {
         .status(400)
         .json({ message: "This user has already been follow" });
     }
+
+    // * Follow
     await Follow.create({
       followId,
       followerId: req.user.id,
@@ -111,19 +123,31 @@ exports.followSomeone = async (req, res, next) => {
   }
 };
 
-exports.unfollow = async (req, res, next) => {
+// TODO: UnFollow
+exports.unFollow = async (req, res, next) => {
   try {
     const { followId } = req.params;
+
+    // ? Validate follow id
+    if (typeof followId !== "string" || followId.trim() === "") {
+      return res.status(400).json({ message: "follow id is require" });
+    }
+
+    // ? Find user
     const user = await User.findOne({ where: { id: followId } });
     if (!user) {
       return res.status(400).json({ message: "followId user not found" });
     }
+
+    // ? Validate if user is not follow
     const follow = await Follow.findOne({
       where: { followerId: req.user.id, followId },
     });
     if (!follow) {
       return res.status(400).json({ message: "you not follow this user" });
     }
+
+    // * UnFollow
     await follow.destroy();
     res.status(204).json();
   } catch (err) {

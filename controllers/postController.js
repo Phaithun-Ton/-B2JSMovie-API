@@ -16,6 +16,7 @@ const {
 
 const uploadPromise = util.promisify(cloudinary.uploader.upload);
 
+// TODO: Get all post
 exports.getAllPosts = async (req, res, next) => {
   try {
     const posts = await Post.findAll({
@@ -54,6 +55,7 @@ exports.getAllPosts = async (req, res, next) => {
   }
 };
 
+// TODO: Get post by user
 exports.getPostByUser = async (req, res, next) => {
   try {
     const posts = await Post.findAll({
@@ -92,6 +94,7 @@ exports.getPostByUser = async (req, res, next) => {
   }
 };
 
+// TODO: Get post
 exports.getPost = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -137,33 +140,43 @@ exports.getPost = async (req, res, next) => {
   }
 };
 
+// TODO: Create post
 exports.createPost = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    const { title, content } = req.body;
-    const { tagName } = req.query;
+    const { title, content, tagNameId } = req.body;
+
+    // ? Validate data
     if (!title && !req.files && !content) {
       return res
         .status(400)
-        .json({ message: "title or image or content is request" });
+        .json({ message: "title or image or content is require" });
     }
+
+    // ? Validate tag name
+    if (tagNameId.length === 0) {
+      return res.status(400).json({ message: "tag name id is require" });
+    }
+
+    // ? Find Tag Name
     const tagNames = await TagName.findAll({
-      where: { title: tagName ?? "No Tag Name" },
+      where: { id: tagNameId },
     });
     if (!tagNames) {
-      return res.status(400).json({ message: "title tag name not found" });
+      return res.status(400).json({ message: "Tag name not found" });
     }
-    let result = {};
-    let tmp = [];
+
+    // * Create post
     const post = await Post.create(
       {
-        title,
-        content,
+        title: title ?? null,
+        content: content ?? null,
         userId: req.user.id,
       },
       { transaction }
     );
 
+    // * Create post tag name
     for (const postTagName of tagNames) {
       await PostTagName.create(
         {
@@ -174,14 +187,17 @@ exports.createPost = async (req, res, next) => {
       );
     }
 
-    // console.log(req);
-    console.log(req.body.image);
+    // ? Upload File
+    let result = {};
+    let tmp = [];
 
     if (req.files) {
       for (const file of req.files) {
         const { path } = file;
         result = await uploadPromise(path);
         fs.unlinkSync(path);
+
+        // * Create post img
         const postImg = await PostImg.create(
           {
             imgUrl: result.secure_url,
@@ -200,59 +216,81 @@ exports.createPost = async (req, res, next) => {
   }
 };
 
+// TODO: Update post
 exports.updatePost = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
-    const { title, content } = req.body;
-    const check = content ? content.trim() : null;
-    const { postId } = req.params;
-    const { tagName, chageTagName } = req.query;
-    const post = await Post.findOne({ where: { id: postId } });
+    const { title, content, postId, tagNameId } = req.body;
+
+    // ? Validate post id
+    if (typeof postId !== "string" || postId.trim() === "") {
+      return res.status(400).json({ message: "post id is require" });
+    }
+
+    // ? Validate tag name
+    if (typeof tagNameId !== "string" || tagNameId.trim() === "") {
+      return res.status(400).json({ message: "tag name id is require" });
+    }
+
+    // ? Find Post
+    const post = await Post.findOne({ where: { id: postId } }, { transaction });
     if (!post) {
       return res.status(400).json({ message: "post id not found" });
     }
+
+    // ? Validate user
     if (req.user.id !== post.userId) {
-      return res.status(400).json({ message: "you cannot edit this post" });
+      return res.status(400).json({ message: "you do not have permission" });
     }
-    if (!title && !req.files && !tagName && !check) {
+
+    // ? Validate before update
+    if (!title && !req.files && !content) {
       return res
         .status(400)
-        .json({ message: "title or image or tag name is request" });
+        .json({ message: "title or content or image or tag name is require" });
     }
-    if (tagName) {
-      const oldTag = await TagName.findOne({ where: { title: tagName } });
-      const newTag = await TagName.findOne({ where: { title: chageTagName } });
-      if (!oldTag || !newTag) {
-        return res.status(400).json({ message: "title tag name not found" });
-      }
-      const postTagNames = await PostTagName.findOne({
-        where: { tagNameId: oldTag.id, postId },
-      });
-      if (!postTagNames) {
-        return res.status(400).json({ message: "post tag name id not found" });
-      }
-      if (tagName && chageTagName) {
-        await PostTagName.update(
-          {
-            tagNameId: newTag.id,
-          },
-          { where: { tagNameId: oldTag.id, postId } },
-          { transaction }
-        );
-      }
+
+    // ? Find Tag Name
+    const tagNames = await TagName.findAll(
+      {
+        where: { id: tagNameId },
+      },
+      { transaction }
+    );
+    if (!tagNames) {
+      return res.status(400).json({ message: "Tag name not found" });
     }
-    let result = {};
-    let tmp = [];
-    const postImgs = await PostImg.findAll(
+
+    // ? Find Post Tag Name
+    const postTagName = await PostTagName.findAll(
       { where: { postId } },
       { transaction }
     );
+    if (!postTagName) {
+      return res.status(400).json({ message: "post id not found" });
+    }
+
+    // * Delete post tag name
+    for (const item of postTagName) {
+      await item.destroy({}, { transaction });
+    }
+
+    console.log(typeof tagNames);
+
+    // * create post tag name
+    for (const postTagName of tagNames) {
+      await PostTagName.create(
+        {
+          postId: post.id,
+          tagNameId: postTagName.id,
+        },
+        { transaction }
+      );
+    }
+
+    let result = {};
+    let tmp = [];
     if (req.files) {
-      for (const img of postImgs) {
-        const splied = await img.imgUrl.split("/");
-        cloudinary.uploader.destroy(splied[splied.length - 1].split(".")[0]);
-        await PostImg.destroy({ where: { postId } }, { transaction });
-      }
       for (const file of req.files) {
         const { path } = file;
         result = await uploadPromise(path);
@@ -270,14 +308,13 @@ exports.updatePost = async (req, res, next) => {
     }
     const checkTitle = title ?? post.title;
     const checkContent = content ?? post.content;
-    const newPost = await Post.update(
+    await post.update(
       {
         userId: req.user.id,
         title: checkTitle,
         content: checkContent,
-        img: result.secure_url,
       },
-      { where: { id: postId } }
+      { transaction }
     );
     await transaction.commit();
     res.status(201).json({ tmp, post });
@@ -287,6 +324,7 @@ exports.updatePost = async (req, res, next) => {
   }
 };
 
+// TODO: Delete post
 exports.deletePost = async (req, res, next) => {
   const transaction = await sequelize.transaction();
   try {
@@ -316,6 +354,50 @@ exports.deletePost = async (req, res, next) => {
     await Comment.destroy({ where: { postId: id } }, { transaction });
     await PostTagName.destroy({ where: { postId: id } }, { transaction });
     await Post.destroy({ where: { id } }, { transaction });
+    await transaction.commit();
+    res.status(204).json();
+  } catch (err) {
+    await transaction.rollback();
+    next(err);
+  }
+};
+
+// TODO: Delete post
+exports.deleteImage = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+  try {
+    const { id } = req.params;
+
+    // ? Validate img url
+    if (typeof id !== "string" || id.trim() === "") {
+      return res.status(400).json({ message: "post image id is require" });
+    }
+
+    // ? Find Post Image
+    const postImage = await PostImg.findOne({ where: { id } }, { transaction });
+    if (!postImage) {
+      return res.status(400).json({ message: "post image not found" });
+    }
+
+    // ? Find Post
+    const post = await Post.findOne(
+      { where: { id: postImage.postId } },
+      { transaction }
+    );
+    if (!post) {
+      return res.status(400).json({ message: "post not found" });
+    }
+
+    // ? Validate user
+    if (req.user.id !== post.userId) {
+      return res.status(400).json({ message: "you do not have permission" });
+    }
+
+    // * Delete post image
+    const splied = await postImage.imgUrl.split("/");
+    cloudinary.uploader.destroy(splied[splied.length - 1].split(".")[0]);
+    await postImage.destroy();
+
     await transaction.commit();
     res.status(204).json();
   } catch (err) {

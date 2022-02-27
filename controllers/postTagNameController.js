@@ -1,5 +1,6 @@
 const { TagName, Post, PostTagName } = require("../models");
 
+// TODO: Get all post tag name
 exports.getAllPostTagName = async (req, res, next) => {
   try {
     const { postId } = req.params;
@@ -20,6 +21,7 @@ exports.getAllPostTagName = async (req, res, next) => {
   }
 };
 
+// TODO: Add post tag name
 exports.addPostTagName = async (req, res, next) => {
   try {
     const { postId, tagNameId } = req.params;
@@ -51,6 +53,7 @@ exports.addPostTagName = async (req, res, next) => {
   }
 };
 
+// TODO: Delete post tag name
 exports.deletePostTagName = async (req, res, next) => {
   try {
     const { postId, tagNameId } = req.params;

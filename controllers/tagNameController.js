@@ -1,5 +1,6 @@
 const { TagName, PostTagName, Post, PostImg, User } = require("../models");
 
+// TODO: Get all tag name
 exports.getAllTagName = async (req, res, next) => {
   try {
     const tagNames = await TagName.findAll();
@@ -9,6 +10,7 @@ exports.getAllTagName = async (req, res, next) => {
   }
 };
 
+// TODO: Get all post tag name
 exports.getAllPostTagName = async (req, res, next) => {
   try {
     const tagNames = await TagName.findAll({
@@ -26,6 +28,7 @@ exports.getAllPostTagName = async (req, res, next) => {
           },
         },
       ],
+      order: [["id", "DESC"]],
     });
 
     res.status(200).json({ tagNames });
@@ -34,6 +37,7 @@ exports.getAllPostTagName = async (req, res, next) => {
   }
 };
 
+// TODO: Create tag name
 exports.createTagName = async (req, res, next) => {
   try {
     const { title, description } = req.body;
@@ -41,15 +45,15 @@ exports.createTagName = async (req, res, next) => {
       req.user.role !== process.env.ROLE_ADMIN &&
       req.user.role !== process.env.ROLE_OWNER
     ) {
-      return res.status(403).json({ message: "you not have permission" });
+      return res.status(403).json({ message: "you do not have permission" });
     }
-    const checkTitle = title ?? null;
-    if (checkTitle === "" || checkTitle === null) {
+
+    // ? Validate title
+    if (typeof title !== "string" || title.trim() === "") {
       return res.status(400).json({ message: "title is require" });
     }
-    if (typeof title !== "string") {
-      return res.status(400).json({ message: "title must be a string" });
-    }
+
+    // * Create tag name
     const tagName = await TagName.create({
       title,
       description: description ?? null,
@@ -61,6 +65,7 @@ exports.createTagName = async (req, res, next) => {
   }
 };
 
+// TODO: Update tag name
 exports.updateTagName = async (req, res, next) => {
   try {
     const { title, description, tagNameId } = req.body;
@@ -68,30 +73,31 @@ exports.updateTagName = async (req, res, next) => {
       req.user.role !== process.env.ROLE_ADMIN &&
       req.user.role !== process.env.ROLE_OWNER
     ) {
-      return res.status(403).json({ message: "you not have permission" });
+      return res.status(403).json({ message: "you do not have permission" });
+    }
+
+    // ? Validate tag name id
+    if (typeof tagNameId !== "number") {
+      return res.status(400).json({ message: "tag name id is require" });
     }
     const tagName = await TagName.findOne({ where: { id: tagNameId } });
     if (!tagName) {
       return res.status(400).json({ message: "tag name id not found" });
     }
-    await TagName.update(
-      {
-        title: title ?? tagName.title,
-        description: description ?? tagName.description,
-      },
-      { where: { id: tagNameId } }
-    );
-    const newTagName = await TagName.findOne({ where: { id: tagNameId } });
-    res.status(200).json({
-      message: "update success",
-      title: newTagName.title,
-      description: newTagName.description,
+
+    // * Update tag name
+    await tagName.update({
+      title: title ?? tagName.title,
+      description: description ?? tagName.description,
     });
+
+    res.status(200).json({ message: "update success", tagName });
   } catch (err) {
     next(err);
   }
 };
 
+// TODO: Delete tag name
 exports.deleteTagname = async (req, res, next) => {
   try {
     const { tagNameId } = req.params;
@@ -99,7 +105,12 @@ exports.deleteTagname = async (req, res, next) => {
       req.user.role !== process.env.ROLE_ADMIN &&
       req.user.role !== process.env.ROLE_OWNER
     ) {
-      return res.status(403).json({ message: "you not have permission" });
+      return res.status(403).json({ message: "you do not have permission" });
+    }
+
+    // ? Validate tag name id
+    if (typeof tagNameId !== "string" || tagNameId.trim() === "") {
+      return res.status(400).json({ message: "tag name id is require" });
     }
     const tagName = await TagName.findOne({ where: { id: tagNameId } });
     if (!tagName) {

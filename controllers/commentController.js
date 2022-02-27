@@ -1,21 +1,28 @@
 const { Post, Comment, User } = require("../models");
 
+// TODO: Create Comment
 exports.createComment = async (req, res, next) => {
   try {
     const { title, postId } = req.body;
+
+    // ? Find post
     const post = await Post.findOne({ where: { id: postId } });
     if (!post) {
       return res.status(400).json({ message: "Post not found" });
     }
-    const checkTitle = title ? title.trim() : null;
-    if (!checkTitle) {
+
+    // ? Validate title
+    if (typeof title !== "string" || title.trim() === "") {
       return res.status(400).json({ message: "title is request" });
     }
+
+    // * Create comment
     const comment = await Comment.create({
       title,
       postId,
       userId: req.user.id,
     });
+
     const findComment = await Comment.findOne({
       where: {
         id: comment.id,
@@ -31,6 +38,7 @@ exports.createComment = async (req, res, next) => {
   }
 };
 
+// TODO: Update Comment
 exports.updateComment = async (req, res, next) => {
   try {
     const { title } = req.body;
@@ -56,6 +64,7 @@ exports.updateComment = async (req, res, next) => {
   }
 };
 
+// TODO: Delete Comment
 exports.deleteComment = async (req, res, next) => {
   try {
     const { id } = req.params;
