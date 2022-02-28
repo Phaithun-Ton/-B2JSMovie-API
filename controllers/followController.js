@@ -26,6 +26,12 @@ exports.getUnknown = async (req, res, next) => {
           [Op.notIn]: followIds,
         },
       },
+      include: [
+        {
+          as: "follow",
+          model: Follow,
+        },
+      ],
       attributes: {
         exclude: ["password", "email", "createdAt", "updatedAt", "deletedAt"],
       },
@@ -71,6 +77,12 @@ exports.getAllFollows = async (req, res, next) => {
         id: followIds,
         ...userWhere,
       },
+      include: [
+        {
+          as: "follow",
+          model: Follow,
+        },
+      ],
       attributes: {
         exclude: ["password", "email", "createdAt", "updatedAt", "deletedAt"],
       },
