@@ -8,16 +8,24 @@ const {
   updatePost,
   deletePost,
   deleteImage,
+  getPostRc,
+  getPostImageById,
 } = require("../controllers/postController");
 const upload = require("../middlewares/upload");
 
 const router = express.Router();
+
+// TODO: Get post by community rc
+router.get("/communityRc", getPostRc);
 
 // TODO: Get all post
 router.get("/", authenticate, getAllPosts);
 
 // TODO: Get post by user
 router.get("/postByUser", authenticate, getPostByUser);
+
+// TODO: Get post image by id
+router.get("/post-image/:postId", authenticate, getPostImageById);
 
 // TODO: Get post
 router.get("/:postId", authenticate, getPost);

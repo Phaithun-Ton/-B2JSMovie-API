@@ -1,27 +1,42 @@
 const fs = require("fs");
+const util = require("util");
 const cloudinary = require("cloudinary").v2;
 const { User } = require("../models");
 
-// TODO: Update user profile image
-exports.updateProfileImg = (req, res, next) => {
-  try {
-    cloudinary.uploader.upload(req.file.path, async (err, result) => {
-      if (err) return next(err);
+const uploadPromise = util.promisify(cloudinary.uploader.upload);
 
-      await User.update(
-        { profileImg: result.secure_url },
-        { where: { id: req.user.id } }
-      );
-      if (req.user.profileImg) {
-        const splied = req.user.profileImg.split("/");
-        cloudinary.uploader.destroy(splied[splied.length - 1].split(".")[0]);
-      }
-      fs.unlinkSync(req.file.path);
-      res.json({
-        message: "Upload profile image completed",
+// TODO: Update user profile image
+exports.updateProfileImg = async (req, res, next) => {
+  try {
+    const { firstName, lastName } = req.body;
+
+    const user = await User.findOne({ where: { id: req.user.id } });
+
+    if (req.file) {
+      const splied = await user.profileImg.split("/");
+      cloudinary.uploader.destroy(splied[splied.length - 1].split(".")[0]);
+      const { path } = req.file;
+      const result = await uploadPromise(path);
+      fs.unlinkSync(path);
+
+      await user.update({
         profileImg: result.secure_url,
+        firstName,
+        lastName,
       });
+
+      res.status(201).json({
+        message: "Upload profile image completed",
+        user,
+      });
+    }
+
+    await user.update({
+      firstName,
+      lastName,
     });
+
+    res.status(200).json({ user });
   } catch (err) {
     next(err);
   }

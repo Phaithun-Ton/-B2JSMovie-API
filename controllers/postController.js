@@ -94,6 +94,27 @@ exports.getPostByUser = async (req, res, next) => {
   }
 };
 
+// TODO: Get post image by id
+exports.getPostImageById = async (req, res, next) => {
+  try {
+    const { postId } = req.params;
+
+    // ? Validate post id
+    if (typeof postId !== "string" || postId.trim() === "") {
+      return res.status(400).json({ message: "post id is require" });
+    }
+
+    const postImage = await PostImg.findAll({ where: { postId } });
+    if (!postImage) {
+      return res.status(400).json({ message: "post not found" });
+    }
+
+    res.status(200).json({ postImage });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // TODO: Get post
 exports.getPost = async (req, res, next) => {
   try {
@@ -135,6 +156,32 @@ exports.getPost = async (req, res, next) => {
       return res.status(400).json({ message: "post not found" });
     }
     res.status(200).json({ post });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// TODO: Get post by community rc
+exports.getPostRc = async (req, res, next) => {
+  try {
+    // ? Find like
+    const posts = await Like.findAll({
+      attributes: [
+        "postId",
+        [sequelize.fn("count", sequelize.col("post_id")), "count"],
+      ],
+      group: ["Like.post_id"],
+      order: sequelize.literal("count DESC"),
+      limit: 5,
+      include: {
+        model: Post,
+        include: {
+          model: Comment,
+        },
+      },
+    });
+
+    res.status(200).json({ posts });
   } catch (err) {
     next(err);
   }

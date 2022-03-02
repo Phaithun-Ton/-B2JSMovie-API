@@ -13,8 +13,6 @@ exports.getUnknown = async (req, res, next) => {
       (acc, item) => {
         if (req.user.id === item.followerId) {
           acc.push(item.followId);
-        } else {
-          acc.push(item.followerId);
         }
         return acc;
       },

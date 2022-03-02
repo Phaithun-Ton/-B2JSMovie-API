@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { TagName, PostTagName, Post, PostImg, User } = require("../models");
 
 // TODO: Get all tag name
@@ -10,26 +11,135 @@ exports.getAllTagName = async (req, res, next) => {
   }
 };
 
-// TODO: Get all post tag name
-exports.getAllPostTagName = async (req, res, next) => {
+// TODO: Get all post by tag name
+exports.getAllPostByTagName = async (req, res, next) => {
   try {
-    const tagNames = await TagName.findAll({
-      where: {},
-      include: [
-        {
-          model: PostTagName,
-          include: {
-            model: Post,
+    const { title } = req.query;
+
+    let tagNames;
+
+    if (title) {
+      tagNames = await TagName.findAll({
+        where: { title: title },
+        include: [
+          {
+            model: PostTagName,
             include: {
-              model: PostImg,
-              model: User,
-              attributes: ["id", "firstName", "lastName", "profileImg"],
+              model: Post,
+              include: {
+                model: PostImg,
+                model: User,
+                attributes: ["id", "firstName", "lastName", "profileImg"],
+              },
             },
           },
-        },
-      ],
-      order: [["id", "DESC"]],
-    });
+        ],
+        order: [["id", "DESC"]],
+      });
+    }
+
+    if (!title) {
+      tagNames = await TagName.findAll({
+        where: {},
+        include: [
+          {
+            model: PostTagName,
+            include: {
+              model: Post,
+              include: {
+                model: PostImg,
+                model: User,
+                attributes: ["id", "firstName", "lastName", "profileImg"],
+              },
+            },
+          },
+        ],
+        order: [["id", "DESC"]],
+      });
+    }
+
+    res.status(200).json({ tagNames });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// TODO: Get All post by text
+exports.getAllPostByText = async (req, res, next) => {
+  try {
+    const { text } = req.query;
+
+    let tagNames;
+
+    if (!text) {
+      tagNames = await TagName.findAll({
+        where: {},
+        include: [
+          {
+            model: PostTagName,
+            include: {
+              model: Post,
+              include: {
+                model: PostImg,
+                model: User,
+                attributes: ["id", "firstName", "lastName", "profileImg"],
+              },
+            },
+          },
+        ],
+        order: [["id", "DESC"]],
+      });
+    }
+
+    if (text) {
+      console.log(text);
+      const post = await Post.findAll({
+        where: { title: { [Op.substring]: text } },
+      });
+
+      console.log("---------------------------------1");
+      console.log(post);
+
+      const result = [];
+
+      console.log(post.map((item) => item.id));
+
+      const postId = post.map((item) => {
+        return item.id;
+      });
+
+      console.log("---------------------------------2");
+      console.log(postId);
+
+      const postTagName = await PostTagName.findAll({
+        where: { postId },
+      });
+
+      console.log("----------------------------3");
+      console.log(postTagName);
+      console.log(postTagName.map((item) => item.tagNameId));
+      const tagNameId = postTagName.map((item) => item.tagNameId);
+      console.log("---------------------------4");
+      console.log(tagNameId);
+
+      tagNames = await TagName.findAll({
+        where: { id: tagNameId },
+        include: [
+          {
+            model: PostTagName,
+            include: {
+              model: Post,
+              include: {
+                model: PostImg,
+                model: User,
+                attributes: ["id", "firstName", "lastName", "profileImg"],
+              },
+            },
+          },
+        ],
+        order: [["id", "DESC"]],
+      });
+    }
 
     res.status(200).json({ tagNames });
   } catch (err) {

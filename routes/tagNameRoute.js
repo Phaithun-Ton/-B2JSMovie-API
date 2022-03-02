@@ -2,10 +2,11 @@ const express = require("express");
 const authenticate = require("../middlewares/authenticate");
 const {
   getAllTagName,
-  getAllPostTagName,
+  getAllPostByTagName,
   createTagName,
   updateTagName,
   deleteTagname,
+  getAllPostByText,
 } = require("../controllers/tagNameController");
 
 const router = express.Router();
@@ -14,7 +15,10 @@ const router = express.Router();
 router.get("/", getAllTagName);
 
 // TODO: Get all post tag name
-router.get("/postTagNames", getAllPostTagName);
+router.get("/postTagNames", getAllPostByTagName);
+
+// TODO:
+router.get("/postByText", getAllPostByText);
 
 // TODO: Create tag name
 router.post("/", authenticate, createTagName);
